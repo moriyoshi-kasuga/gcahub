@@ -1,21 +1,31 @@
 package main
 
 import (
-	"encoding/json"
+	"log"
 	"net/http"
+	"os"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Allow Method is GET", http.StatusMethodNotAllowed)
-		return
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Hello World"})
-}
+	CORS := os.Getenv("CORS")
+	r := gin.Default()
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{CORS}
+	config.AllowCredentials = true
+	r.Use(cors.New(config))
 
-func main() {
-	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8080", nil)
+	r.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "This is the API server.")
+	})
+
+	r.Run()
 }
